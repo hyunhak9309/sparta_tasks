@@ -1,57 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tasks/core/app_theme.dart';
-import 'package:tasks/core/to_do_entity.dart';
+import 'package:tasks/home_page/view_model/home_page_view_model.dart';
+import 'package:tasks/model/to_do_model.dart';
+import 'package:uuid/uuid.dart';
 
-class AddToDoDialog extends StatefulWidget {
+class AddToDoDialog extends HookConsumerWidget {
   const AddToDoDialog({super.key});
 
   @override
-  State<AddToDoDialog> createState() => _AddToDoDialogState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFavorite = useState(false);
+    final isDescriptionActivated = useState(false);
+    final focusNode = useFocusNode();
+    final controller1 = useTextEditingController();
+    final controller2 = useTextEditingController();
+    final textValue = useValueListenable(controller1);
 
-class _AddToDoDialogState extends State<AddToDoDialog> {
-  bool isFavorite = false;
-  bool isDescriptionActivated = false;
-  final _focusNode = FocusNode();
-  final _controller1 = TextEditingController();
-  final _controller2 = TextEditingController();
+    void saveTodo() {
+      if (textValue.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '할 일을 입력해주세요.',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red.withValues(alpha: 0.8),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        final toDo = ToDoModel(
+          id: const Uuid().v4(),
+          title: controller1.text.trim(),
+          description: isDescriptionActivated.value
+              ? controller2.text.trim()
+              : null,
+          isFavorite: isFavorite.value,
+          isDone: false,
+        );
 
-  void saveToDo() {
-    final title = _controller1.text.trim();
-    final description = _controller2.text.trim().isEmpty
-        ? null
-        : _controller2.text.trim();
-    if (title.isNotEmpty) {
-      final result = ToDoEntity(
-        title: title,
-        description: description,
-        isFavorite: isFavorite,
-      );
-      Navigator.of(context).pop(result);
-    } else {
-      // _focusNode.requestFocus();
+        ref.read(homePageViewModelProvider.notifier).addTodo(toDo: toDo);
+      }
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('할 일을 입력해주세요.', style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.red.withValues(alpha: 0.8),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 15),
-        ),
-      );
     }
-  }
 
-  @override
-  void dispose() {
-    _controller1.dispose();
-    _controller2.dispose();
-    _focusNode.dispose(); // ✅ 중요: FocusNode 해제
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
         decoration: BoxDecoration(
@@ -68,7 +63,7 @@ class _AddToDoDialogState extends State<AddToDoDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: _controller1,
+              controller: controller1,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: '새 할 일',
@@ -80,15 +75,14 @@ class _AddToDoDialogState extends State<AddToDoDialog> {
               style: TextStyle(color: vrc(context).textColor200, fontSize: 16),
               maxLines: 1,
               autofocus: true,
-              focusNode: _focusNode,
+              focusNode: focusNode,
               keyboardType: TextInputType.text,
-              onSubmitted: (value) => saveToDo(),
-              onChanged: (value) => setState(() {}),
+              onSubmitted: (value) => saveTodo(),
             ),
-            if (isDescriptionActivated)
-              Expanded(
+            if (isDescriptionActivated.value)
+              Flexible(
                 child: TextField(
-                  controller: _controller2,
+                  controller: controller2,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     hintText: '세부정보 추가',
@@ -106,11 +100,10 @@ class _AddToDoDialogState extends State<AddToDoDialog> {
                   Row(
                     spacing: 12,
                     children: [
-                      if (!isDescriptionActivated)
+                      if (!isDescriptionActivated.value)
                         InkWell(
-                          onTap: () => setState(() {
-                            isDescriptionActivated = !isDescriptionActivated;
-                          }),
+                          onTap: () => isDescriptionActivated.value =
+                              !isDescriptionActivated.value,
                           child: SizedBox(
                             width: 40,
                             height: 40,
@@ -120,15 +113,13 @@ class _AddToDoDialogState extends State<AddToDoDialog> {
                           ),
                         ),
                       InkWell(
-                        onTap: () => setState(() {
-                          isFavorite = !isFavorite;
-                        }),
+                        onTap: () => isFavorite.value = !isFavorite.value,
                         child: SizedBox(
                           width: 40,
                           height: 40,
                           child: Center(
                             child: Icon(
-                              isFavorite
+                              isFavorite.value
                                   ? Icons.star_rounded
                                   : Icons.star_border_rounded,
                               size: 24,
@@ -139,7 +130,7 @@ class _AddToDoDialogState extends State<AddToDoDialog> {
                     ],
                   ),
                   InkWell(
-                    onTap: () => saveToDo(),
+                    onTap: () => saveTodo(),
                     child: Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 12,
@@ -148,10 +139,13 @@ class _AddToDoDialogState extends State<AddToDoDialog> {
                       child: Text(
                         '저장',
                         style: TextStyle(
-                          color: _controller1.text.trim().isNotEmpty
-                              ? vrc(context).textColor200
+                          color: textValue.text.trim().isNotEmpty
+                              ? fxc(context).activeColor
                               : vrc(context).textColor100,
                           fontSize: 16,
+                          fontWeight: textValue.text.trim().isNotEmpty
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     ),

@@ -23,5 +23,4 @@ class AppTheme {
 VariableColors vrc(BuildContext context) =>
     Theme.of(context).extension<VariableColors>()!;
 
-FixedColors fxc(BuildContext context) =>
-    Theme.of(context).extension<FixedColors>()!;
+FixedColors fxc(BuildContext context) => Theme.of(context).extension<FixedColors>()!;

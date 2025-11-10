@@ -1,9 +1,15 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tasks/core/app_theme.dart';
-import 'package:tasks/view/home/home_page.dart';
+import 'package:tasks/core/firebase_options.dart';
+import 'package:tasks/home_page/view/home_page.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(ProviderScope(child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -15,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-      home: const HomePage(title: '태현`s Tasks'),
+      home: const HomePage(title: '스파르타`s Tasks'),
     );
   }
 }

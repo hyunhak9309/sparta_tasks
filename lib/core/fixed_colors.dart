@@ -8,12 +8,14 @@ import 'package:flutter/material.dart';
 
 @immutable
 class FixedColors extends ThemeExtension<FixedColors> {
-  const FixedColors({required this.brandColor});
+  const FixedColors({required this.brandColor, required this.activeColor});
   final Color? brandColor;
+  final Color? activeColor;
 
   /// 브랜드 컬러 같은 고정된 컬러는 라이트/다크로 나눠서 선언할 필요가 없습니다.
   static const FixedColors constant = FixedColors(
     brandColor: Color(0xFFD73300),
+    activeColor: Color(0xFF1877F2), // 블루계열 (예: Facebook 블루)
   );
 
   /// copyWith와 lerp는 Flutter의 ThemeExtension 구조에서 필수로 오버라이드해야 하는 “핵심 메서드 두 가지”입니다.
@@ -21,14 +23,19 @@ class FixedColors extends ThemeExtension<FixedColors> {
   /// Flutter는 Theme.of(context)로 가져온 객체를 불변(immutable) 으로 간주합니다. 따라서 직접 수정(colors.background200 = ...)은 불가능해야 하고,
   /// “복사본을 기반으로 새로운 테마 상태를 만들기” 위해 copyWith()가 필요합니다.
   @override
-  FixedColors copyWith({Color? brandColor}) =>
-      FixedColors(brandColor: brandColor ?? this.brandColor);
+  FixedColors copyWith({Color? brandColor, Color? activeColor}) => FixedColors(
+    brandColor: brandColor ?? this.brandColor,
+    activeColor: activeColor ?? this.activeColor,
+  );
 
   /// 라이트/다크 테마 전환처럼 Theme이 교체될 때, 색상이 자연스럽게 변경(transition) 되도록 하는 메서드입니다.
   /// 라이트 → 다크 테마 전환 시, 각 색상이 “뚝” 바뀌는 게 아니라 부드럽게 fade in/out 되게 됩니다.
   @override
   FixedColors lerp(ThemeExtension<FixedColors>? other, double t) {
     if (other is! FixedColors) return this;
-    return FixedColors(brandColor: Color.lerp(brandColor, other.brandColor, t));
+    return FixedColors(
+      brandColor: Color.lerp(brandColor, other.brandColor, t),
+      activeColor: Color.lerp(activeColor, other.activeColor, t),
+    );
   }
 }

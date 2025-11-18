@@ -3,10 +3,13 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="tasks"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

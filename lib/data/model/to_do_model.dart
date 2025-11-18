@@ -1,0 +1,21 @@
+
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tasks/core/utils/json_converter.dart';
+
+part 'to_do_model.freezed.dart';
+part 'to_do_model.g.dart';
+
+@freezed
+abstract class ToDoModel with _$ToDoModel {
+  const factory ToDoModel({
+    required String id,
+    required String title,
+    required String? description,
+    @JsonKey(name: 'is_favorite') required bool isFavorite,
+    @JsonKey(name: 'is_done') required bool isDone,
+    @JsonKey(fromJson: convertToDateTime, toJson: convertToTimeString, name: 'created_at') required DateTime createdAt,
+  }) = _ToDoModel;
+
+  factory ToDoModel.fromJson(Map<String, Object?> json) =>
+      _$ToDoModelFromJson(json);
+}
